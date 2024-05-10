@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2024 Avnet Silica GmbH
+ */
+
+/dts-v1/;
+
+#include "imx8mp-msc-sm2s-24N0600I.dtsi"
+#include <dt-bindings/clock/imx8mp-clock.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "MSC SM2-MB-EP5-002 Carrier Board with SM2S-IMX8PLUS-QC-24N0600I SoM";
+	compatible = "avnet,sm2s-imx8mp-24N0600I-ep5-002",
+		     "avnet,sm2s-imx8mp-24N0600I", "avnet,sm2s-imx8mp",
+		     "fsl,imx8mp";
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+	clock-frequency = <400000>;
+	status = "okay";
+
+	id_eeprom: eeprom@50 {
+		compatible = "atmel,24c64";
+		reg = <0x50>;
+		pagesize = <32>;
+	};
+};
+
+&iomuxc {
+	pinctrl_i2c1: i2c1grp {
+		fsl,pins =
+			<MX8MP_IOMUXC_I2C1_SCL__I2C1_SCL		0x400001c3>,
+			<MX8MP_IOMUXC_I2C1_SDA__I2C1_SDA		0x400001c3>;
+	};
+};

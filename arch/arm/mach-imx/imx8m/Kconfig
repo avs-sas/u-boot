@@ -335,6 +335,16 @@ config TARGET_MSC_SM2S_IMX8MP
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
 
+config TARGET_MSC_SM2S_IMX8MP_24N0600I_4G
+	bool "MSC SMARC2 i.MX8MPLUS 24N0600I 4G"
+	select IMX8MP
+	select SUPPORT_SPL
+	select IMX8M_LPDDR4
+	select FSL_CAAM
+	select ARCH_MISC_INIT
+	select SPL_CRYPTO if SPL
+	imply OF_UPSTREAM
+
 config TARGET_LIBREM5
 	bool "Purism Librem5 Phone"
 	select IMX8MQ
