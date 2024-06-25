@@ -1,0 +1,7 @@
+i.MX8MM SM2S BOARD
+M:	Michael Trimarchi <michael@amarulasolutions.com>
+M:	Waldemar Glensk <waldemar.glensk@avnet.com>
+S:	Maintained
+F:	board/avnet/imx8mm_sm2s/
+F:	include/configs/imx8mm_sm2s.h
+F:	configs/imx8mm_sm2s_defconfig

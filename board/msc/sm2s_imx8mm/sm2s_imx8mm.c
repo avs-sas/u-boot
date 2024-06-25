@@ -1,24 +1,22 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: GPL-2.0+
 /*
- * Based on vendor support provided by AVNET Embedded
- *
- * Copyright (C) 2021 AVNET Embedded, MSC Technologies GmbH
- * Copyright 2021 General Electric Company
- * Copyright 2021 Collabora Ltd.
+ * Copyright 2018 NXP
  */
 
-#include <errno.h>
+#include <config.h>
+#include <env.h>
+#include <init.h>
 #include <miiphy.h>
 #include <netdev.h>
+#include <asm/global_data.h>
+
 #include <asm/arch/clock.h>
-#include <asm/arch/imx8mp_pins.h>
 #include <asm/arch/sys_proto.h>
-#include <asm/mach-imx/gpio.h>
-#include <asm/mach-imx/iomux-v3.h>
-#include <asm-generic/gpio.h>
-#include <linux/delay.h>
+#include <asm/io.h>
+
 #include <handoff.h>
 #include <bloblist.h>
+
 #include "../common/i2c_eeprom.h"
 #include "../common/boardinfo.h"
 #include "../common/mx8m_common.h"
@@ -42,34 +40,58 @@ int board_phys_sdram_size(phys_size_t *size)
 	return 0;
 }
 
-static void setup_fec(void)
+#if IS_ENABLED(CONFIG_FEC_MXC)
+static int setup_fec(void)
 {
 	struct iomuxc_gpr_base_regs *gpr =
 		(struct iomuxc_gpr_base_regs *)IOMUXC_GPR_BASE_ADDR;
 
-	/* Enable RGMII TX clk output */
-	setbits_le32(&gpr->gpr[1], BIT(22));
+	/* Use 125M anatop REF_CLK1 for ENET1, not from external */
+	clrsetbits_le32(&gpr->gpr[1], 0x2000, 0);
+
+	return 0;
 }
 
 int board_phy_config(struct phy_device *phydev)
 {
+	/* enable rgmii rxc skew and phy mode select to RGMII copper */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
+
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x00);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x82ee);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x05);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x100);
+
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 	return 0;
 }
+#endif
 
 int board_init(void)
 {
-	setup_fec();
+	if (IS_ENABLED(CONFIG_FEC_MXC))
+		setup_fec();
 
 	return 0;
 }
 
+int board_mmc_get_env_dev(int devno)
+{
+	return devno;
+}
+
 #define ENV_FDTFILE_MAX_SIZE 64
 
-#if !defined(CONFIG_SPL_BUILD)
 int board_late_init(void)
 {
+	if (IS_ENABLED(CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG)) {
+		env_set("board_name", "SM2S");
+		env_set("board_rev", "iMX8MM");
+	}
+
+#if !defined(CONFIG_SPL_BUILD)
 	char buff[ENV_FDTFILE_MAX_SIZE];
 	char *fdtfile;
 
@@ -85,12 +107,7 @@ int board_late_init(void)
 			bi_get_platform(binfo), bi_get_processor(binfo),
 			bi_get_feature(binfo));
 	env_set("fdt_file", buff);
-
-#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	env_set("board_name", "SM2S");
-	env_set("board_rev", "iMX8MP");
-#endif
+#endif /* !defined(CONFIG_SPL_BUILD) */
 
 	return 0;
 }
-#endif /* !defined(CONFIG_SPL_BUILD) */
