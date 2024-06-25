@@ -1,0 +1,160 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright 2024 Amarula Solutions B.V.
+ * Copyright 2024 Avnet Silica Gmbh
+ */
+
+#include "imx8mm-u-boot.dtsi"
+
+/ {
+	aliases {
+		i2c0 = &i2c1;
+		i2c2 = &i2c3;
+	};
+
+	wdt-reboot {
+		compatible = "wdt-reboot";
+		wdt = <&wdog1>;
+		bootph-pre-ram;
+	};
+
+	firmware {
+		optee {
+			compatible = "linaro,optee-tz";
+			method = "smc";
+		};
+	};
+};
+
+&aips4 {
+	bootph-pre-ram;
+};
+
+&reg_usdhc2_vmmc {
+	u-boot,off-on-delay-us = <20000>;
+};
+
+&pinctrl_uart1 {
+	bootph-pre-ram;
+};
+
+&pinctrl_usdhc1_gpio {
+	bootph-pre-ram;
+};
+
+&pinctrl_usdhc1 {
+	bootph-pre-ram;
+};
+
+&pinctrl_usdhc2_gpio {
+	bootph-pre-ram;
+};
+
+&pinctrl_usdhc2 {
+	bootph-pre-ram;
+};
+
+&gpio1 {
+	bootph-pre-ram;
+};
+
+&gpio2 {
+	bootph-pre-ram;
+};
+
+&gpio3 {
+	bootph-pre-ram;
+};
+
+&gpio4 {
+	bootph-pre-ram;
+};
+
+&gpio5 {
+	bootph-pre-ram;
+};
+
+&uart1 {
+	bootph-pre-ram;
+};
+
+&crypto {
+	bootph-pre-ram;
+};
+
+&sec_jr0 {
+	bootph-pre-ram;
+};
+
+&sec_jr1 {
+	bootph-pre-ram;
+};
+
+&sec_jr2 {
+	bootph-pre-ram;
+};
+
+&usbmisc1 {
+	bootph-pre-ram;
+};
+
+&usbphynop1 {
+	bootph-pre-ram;
+};
+
+&usbotg1 {
+	bootph-pre-ram;
+};
+
+&usdhc1 {
+	bootph-pre-ram;
+	mmc-hs400-1_8v;
+	mmc-hs400-enhanced-strobe;
+};
+
+&usdhc2 {
+	bootph-pre-ram;
+	sd-uhs-sdr104;
+	sd-uhs-ddr50;
+	fsl,signal-voltage-switch-extra-delay-ms = <8>;
+};
+
+&i2c1 {
+	bootph-pre-sram;
+};
+
+&i2c3 {
+	bootph-pre-sram;
+};
+
+&{/soc@0/bus@30800000/i2c@30a40000} {
+	bootph-pre-ram;
+};
+
+&{/soc@0/bus@30800000/i2c@30a40000/eeprom@50} {
+	bootph-pre-ram;
+};
+
+&pinctrl_i2c1 {
+	bootph-pre-ram;
+};
+
+&pinctrl_i2c3 {
+	bootph-pre-ram;
+};
+
+&pinctrl_wdog {
+	bootph-pre-ram;
+};
+
+&fec1 {
+	phy-reset-gpios = <&gpio3 2 GPIO_ACTIVE_LOW>;
+};
+
+&pinctrl_fec1 {
+	bootph-pre-ram;
+};
+
+&wdog1 {
+	bootph-pre-ram;
+};
