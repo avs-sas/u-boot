@@ -4,11 +4,10 @@
  */
 
 #include <common.h>
-#include <command.h>
 #include <cpu_func.h>
 #include <hang.h>
-#include <image.h>
 #include <init.h>
+#include <i2c.h>
 #include <log.h>
 #include <spl.h>
 #include <asm/global_data.h>
@@ -19,16 +18,62 @@
 #include <asm/arch/sys_proto.h>
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/arch/ddr.h>
+#include <asm/mach-imx/gpio.h>
+#include <asm/mach-imx/mxc_i2c.h>
+#include <asm/sections.h>
+
+#include <fsl_esdhc_imx.h>
+#include <linux/delay.h>
+#include <mmc.h>
 
 #include <dm/uclass.h>
 #include <dm/device.h>
 #include <dm/uclass-internal.h>
 #include <dm/device-internal.h>
 
-#include <power/pmic.h>
-#include <power/pca9450.h>
+#include "../common/i2c_eeprom.h"
+#include "../common/boardinfo.h"
+#include "ddr_timings.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+
+struct variant_record {
+	const char *feature;
+	long long unsigned int dram_size;
+	struct dram_timing_info *dram_timing;
+};
+
+static const struct variant_record variants[] = {
+	{
+		.feature	= "001",
+		.dram_size	= SZ_2G,
+		.dram_timing	= &lpddr4_mt53d512m32d2ds_2gib_2chn_2cs_dv1_timing,
+	}, {
+		.feature	= "13N4200I",
+		.dram_size	= SZ_2G,
+		.dram_timing	= &lpddr4_mt53b512m32d2np_2gib_2chn_2cs_dv1_timing,
+	}, {
+		NULL, 0, NULL
+	},
+};
+
+#define DEFAULT_VARIANT_IDX	0
+
+static const struct variant_record *get_variant(const char *feature)
+{
+	const struct variant_record *ptr;
+
+	for (ptr = variants; ptr->feature; ptr++) {
+		if (strlen(ptr->feature) != strlen(feature))
+			continue;
+		if (strcmp(ptr->feature, feature))
+			continue;
+		return ptr;
+	}
+
+	pr_warn("Warning: using default variant settings!\n");
+	return &variants[DEFAULT_VARIANT_IDX];
+}
 
 int spl_board_boot_device(enum boot_device boot_dev_spl)
 {
@@ -37,20 +82,44 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 		return BOOT_DEVICE_BOARD;
 	case SD2_BOOT:
 	case MMC2_BOOT:
-		return BOOT_DEVICE_MMC1;
-	case SD3_BOOT:
-	case MMC3_BOOT:
 		return BOOT_DEVICE_MMC2;
+	case SD1_BOOT:
+	case MMC1_BOOT:
+		return BOOT_DEVICE_MMC1;
 	case QSPI_BOOT:
 		return BOOT_DEVICE_NOR;
+	case NAND_BOOT:
+		return BOOT_DEVICE_NAND;
 	default:
 		return BOOT_DEVICE_NONE;
 	}
 }
 
+static void avnet_spl_dram_init(board_info_t *binfo)
+{
+	const struct variant_record *variant;
+
+	variant = get_variant(bi_get_feature(binfo));
+
+	gd->ram_size = variant->dram_size;
+	ddr_init(variant->dram_timing);
+}
+
 static void spl_dram_init(void)
 {
-	ddr_init(&dram_timing);
+	board_info_t *binfo;
+
+	binfo = bi_init();
+	if (binfo == NULL) {
+		printf("Warning: failed to initialize boardinfo!\n");
+	}
+	else {
+		bi_inc_boot_count(binfo);
+		bi_print(binfo);
+	}
+
+	/* DDR initialization */
+	avnet_spl_dram_init(binfo);
 }
 
 void spl_board_init(void)
@@ -67,40 +136,6 @@ int board_fit_config_name_match(const char *name)
 	return 0;
 }
 #endif
-
-static int power_init_board(void)
-{
-	struct udevice *dev;
-	int ret;
-
-	ret = pmic_get("pca9450@25", &dev);
-	if (ret == -ENODEV) {
-		puts("No pmic\n");
-		return 0;
-	}
-	if (ret != 0)
-		return ret;
-
-	/* BUCKxOUT_DVS0/1 control BUCK123 output */
-	pmic_reg_write(dev, PCA9450_BUCK123_DVS, 0x29);
-
-	/* Buck 1 DVS control through PMIC_STBY_REQ */
-	pmic_reg_write(dev, PCA9450_BUCK1CTRL, 0x59);
-
-	/* Set DVS1 to 0.8v for suspend */
-	pmic_reg_write(dev, PCA9450_BUCK1OUT_DVS1, 0x10);
-
-	/* increase VDD_DRAM to 0.95v for 3Ghz DDR */
-	pmic_reg_write(dev, PCA9450_BUCK3OUT_DVS0, 0x1C);
-
-	/* VDD_DRAM needs off in suspend, set B1_ENMODE=10 (ON by PMIC_ON_REQ = H && PMIC_STBY_REQ = L) */
-	pmic_reg_write(dev, PCA9450_BUCK3CTRL, 0x4a);
-
-	/* set VDD_SNVS_0V8 from default 0.85V */
-	pmic_reg_write(dev, PCA9450_LDO2CTRL, 0xC0);
-
-	return 0;
-}
 
 void board_init_f(ulong dummy)
 {
@@ -133,8 +168,6 @@ void board_init_f(ulong dummy)
 	preloader_console_init();
 
 	enable_tzc380();
-
-	power_init_board();
 
 	/* DDR initialization */
 	spl_dram_init();

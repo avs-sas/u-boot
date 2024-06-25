@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2019, 2021 NXP
+ * Copyright 2024 Amarula Solutions B.V.
+ * Copyright 2024 Avnet Silica Gmbh
  */
 
 #include "imx8mm-u-boot.dtsi"
 
 / {
+	aliases {
+		i2c0 = &i2c1;
+		i2c2 = &i2c3;
+	};
+
 	wdt-reboot {
 		compatible = "wdt-reboot";
 		wdt = <&wdog1>;
@@ -28,10 +34,6 @@
 	u-boot,off-on-delay-us = <20000>;
 };
 
-&pinctrl_reg_usdhc2_vmmc {
-	bootph-pre-ram;
-};
-
 &pinctrl_uart1 {
 	bootph-pre-ram;
 };
@@ -49,10 +51,6 @@
 };
 
 &pinctrl_usdhc2 {
-	bootph-pre-ram;
-};
-
-&pinctrl_usdhc3 {
 	bootph-pre-ram;
 };
 
@@ -110,6 +108,8 @@
 
 &usdhc1 {
 	bootph-pre-ram;
+	mmc-hs400-1_8v;
+	mmc-hs400-enhanced-strobe;
 };
 
 &usdhc2 {
@@ -119,21 +119,19 @@
 	fsl,signal-voltage-switch-extra-delay-ms = <8>;
 };
 
-&usdhc3 {
-	bootph-pre-ram;
-	mmc-hs400-1_8v;
-	mmc-hs400-enhanced-strobe;
-};
-
 &i2c1 {
+	bootph-pre-sram;
+};
+
+&i2c3 {
+	bootph-pre-sram;
+};
+
+&{/soc@0/bus@30800000/i2c@30a40000} {
 	bootph-pre-ram;
 };
 
-&{/soc@0/bus@30800000/i2c@30a20000/pmic@4b} {
-	bootph-pre-ram;
-};
-
-&{/soc@0/bus@30800000/i2c@30a20000/pmic@4b/regulators} {
+&{/soc@0/bus@30800000/i2c@30a40000/eeprom@50} {
 	bootph-pre-ram;
 };
 
@@ -141,7 +139,7 @@
 	bootph-pre-ram;
 };
 
-&pinctrl_pmic {
+&pinctrl_i2c3 {
 	bootph-pre-ram;
 };
 
@@ -150,7 +148,11 @@
 };
 
 &fec1 {
-	phy-reset-gpios = <&gpio4 22 GPIO_ACTIVE_LOW>;
+	phy-reset-gpios = <&gpio3 2 GPIO_ACTIVE_LOW>;
+};
+
+&pinctrl_fec1 {
+	bootph-pre-ram;
 };
 
 &wdog1 {
