@@ -33,16 +33,106 @@
 #include <power/pmic.h>
 #include <power/rn5t567_pmic.h>
 
+#include "../common/i2c_eeprom.h"
+#include "../common/boardinfo.h"
+#include "ddr_timings.h"
+
 DECLARE_GLOBAL_DATA_PTR;
+
+struct variant_record {
+	const char *rev;
+	const char *feature;
+	long long unsigned int dram_size;
+	struct dram_timing_info *dram_timing;
+};
+
+static const struct variant_record variants[] = {
+	{
+		.rev		= "20",
+		.feature	= "24N0680I",
+		.dram_size	= SZ_4G,
+		.dram_timing	= &lpddr4_mt53d1024m32d4dt_4gib_2chn_2cs_timing,
+	}, {
+		.rev		= "A0",
+		.feature	= "14N0740I",
+		.dram_size	= SZ_2G,
+		.dram_timing	= &lpddr4_mt53d512m32d2ds_2gib_2chn_2cs_timing,
+	}, {
+		NULL, NULL, 0, NULL
+	},
+};
+
+#define DEFAULT_VARIANT_IDX	0
+
+static const struct variant_record *get_variant(const char *feature,
+						const char *revision)
+{
+	const struct variant_record *ptr;
+
+	for (ptr = variants; ptr->feature; ptr++) {
+		if (strlen(ptr->feature) != strlen(feature) ||
+		    strlen(ptr->rev) != strlen(revision))
+			continue;
+		if (strcmp(ptr->feature, feature) ||
+		    strcmp(ptr->rev, revision))
+			continue;
+		return ptr;
+	}
+
+	pr_warn("Warning: using default variant settings!\n");
+	return &variants[DEFAULT_VARIANT_IDX];
+}
 
 int spl_board_boot_device(enum boot_device boot_dev_spl)
 {
+	switch (boot_dev_spl) {
+	case SD1_BOOT:
+	case MMC1_BOOT:
+	case SD2_BOOT:
+	case MMC2_BOOT:
+		return BOOT_DEVICE_MMC1;
+	case SD3_BOOT:
+	case MMC3_BOOT:
+		return BOOT_DEVICE_MMC2;
+	case QSPI_BOOT:
+		return BOOT_DEVICE_NOR;
+	case NAND_BOOT:
+		return BOOT_DEVICE_NAND;
+	case USB_BOOT:
+		return BOOT_DEVICE_BOARD;
+	default:
+		return BOOT_DEVICE_NONE;
+	}
+
 	return BOOT_DEVICE_BOOTROM;
+}
+
+static void avnet_spl_dram_init(board_info_t *binfo)
+{
+	const struct variant_record *variant;
+
+	variant = get_variant(bi_get_feature(binfo),
+			      bi_get_revision(binfo));
+
+	gd->ram_size = variant->dram_size;
+	ddr_init(variant->dram_timing);
 }
 
 void spl_dram_init(void)
 {
-	ddr_init(&dram_timing);
+	board_info_t *binfo;
+
+	binfo = bi_init();
+	if (binfo == NULL) {
+		printf("Warning: failed to initialize boardinfo!\n");
+	}
+	else {
+		bi_inc_boot_count(binfo);
+		bi_print(binfo);
+	}
+
+	/* DDR initialization */
+	avnet_spl_dram_init(binfo);
 }
 
 void spl_board_init(void)

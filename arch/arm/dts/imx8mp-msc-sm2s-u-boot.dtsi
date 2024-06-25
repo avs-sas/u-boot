@@ -12,6 +12,19 @@
 	aliases {
 		mmc0 = &usdhc3;
 		mmc1 = &usdhc2;
+		i2c0 = &i2c1;
+		i2c1 = &i2c2;
+		i2c2 = &i2c3;
+	};
+
+	reserved-memory {
+		bootph-pre-ram;
+
+		blooblist@95e668 {
+			reg = <0 0x0095e668 0 0x00001000>;
+			no-map;
+			bootph-pre-ram;
+		};
 	};
 
 	wdt-reboot {
@@ -19,6 +32,10 @@
 		wdt = <&wdog1>;
 		bootph-pre-ram;
 	};
+};
+
+&aips3 {
+	bootph-pre-ram;
 };
 
 &reg_usdhc2_vmmc {
@@ -38,6 +55,18 @@
 };
 
 &i2c1 {
+	bootph-pre-ram;
+};
+
+&pinctrl_i2c1 {
+	bootph-pre-ram;
+};
+
+&{/soc@0/bus@30800000/i2c@30a20000} {
+	bootph-pre-ram;
+};
+
+&{/soc@0/bus@30800000/i2c@30a20000/eeprom@50} {
 	bootph-pre-ram;
 };
 
@@ -74,5 +103,42 @@
 };
 
 &pinctrl_uart2 {
+	bootph-pre-ram;
+};
+
+&usb3_phy1 {
+	status = "okay";
+};
+
+&usb3_1 {
+	status = "okay";
+};
+
+&usb_dwc3_1 {
+	status = "okay";
+};
+
+&usdhc2 {
+	bootph-pre-ram;
+	sd-uhs-sdr104;
+	sd-uhs-ddr50;
+	fsl,signal-voltage-switch-extra-delay-ms = <8>;
+};
+
+&usdhc3 {
+	bootph-pre-ram;
+	mmc-hs400-1_8v;
+	mmc-hs400-enhanced-strobe;
+};
+
+&pinctrl_usdhc2 {
+	bootph-pre-ram;
+};
+
+&pinctrl_usdhc2_gpio {
+	bootph-pre-ram;
+};
+
+&pinctrl_usdhc3 {
 	bootph-pre-ram;
 };

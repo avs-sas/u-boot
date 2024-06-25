@@ -57,4 +57,11 @@
 #define CFG_SYS_FSL_USDHC_NUM	2
 #define CFG_SYS_FSL_ESDHC_ADDR	0
 
+#define I2C1_BUS_ID			0
+#define I2C3_BUS_ID			2
+
+#define CONFIG_SYS_I2C_SPEED		100000
+#define BI_EEPROM_I2C_BUS_ID		I2C1_BUS_ID
+#define BI_EEPROM_I2C_ADDR		0x50
+
 #endif

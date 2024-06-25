@@ -146,6 +146,16 @@ config TARGET_IMX8MN_BSH_SMM_S2PRO
 	select IMX8M_DDR3L
 	imply OF_UPSTREAM
 
+config TARGET_MSC_SM2S_IMX8MM
+	bool "imx8mm LPDDR4 SM2S board"
+	select BINMAN
+	select IMX8MM
+	select SUPPORT_SPL
+	select IMX8M_LPDDR4
+	select FSL_CAAM
+	select ARCH_MISC_INIT
+	select SPL_CRYPTO if SPL
+
 config TARGET_IMX8MN_EVK
 	bool "imx8mn LPDDR4 EVK board"
 	select IMX8MN
@@ -370,6 +380,7 @@ source "board/kontron/pitx_imx8m/Kconfig"
 source "board/kontron/sl-mx8mm/Kconfig"
 source "board/menlo/mx8menlo/Kconfig"
 source "board/msc/sm2s_imx8mp/Kconfig"
+source "board/msc/sm2s_imx8mm/Kconfig"
 source "board/mntre/imx8mq_reform2/Kconfig"
 source "board/phytec/phycore_imx8mm/Kconfig"
 source "board/phytec/phycore_imx8mp/Kconfig"
