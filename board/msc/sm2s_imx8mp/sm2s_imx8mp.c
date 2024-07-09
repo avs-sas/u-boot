@@ -17,8 +17,30 @@
 #include <asm/mach-imx/iomux-v3.h>
 #include <asm-generic/gpio.h>
 #include <linux/delay.h>
+#include <handoff.h>
+#include <bloblist.h>
+#include "../common/i2c_eeprom.h"
+#include "../common/boardinfo.h"
+#include "../common/mx8m_common.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+
+const board_info_t *binfo = NULL;
+
+int board_phys_sdram_size(phys_size_t *size)
+{
+	struct spl_handoff *ho;
+
+	ho = bloblist_find(BLOBLISTT_U_BOOT_SPL_HANDOFF, sizeof(*ho));
+	if (!ho) {
+		*size = PHYS_SDRAM_SIZE;
+		return 0;
+	}
+
+	*size = ho->ram_size;
+
+	return 0;
+}
 
 static void setup_fec(void)
 {
@@ -42,3 +64,33 @@ int board_init(void)
 
 	return 0;
 }
+
+#define ENV_FDTFILE_MAX_SIZE 64
+
+#if !defined(CONFIG_SPL_BUILD)
+int board_late_init(void)
+{
+	char buff[ENV_FDTFILE_MAX_SIZE];
+	char *fdtfile;
+
+	if (!binfo)
+		return 0;
+
+	fdtfile = env_get("fdt_file");
+	if (fdtfile)
+		return 0;
+
+	snprintf(buff, ENV_FDTFILE_MAX_SIZE, "%s-%s-%s-%s-%s.dtb",
+			bi_get_company(binfo), bi_get_form_factor(binfo),
+			bi_get_platform(binfo), bi_get_processor(binfo),
+			bi_get_feature(binfo));
+	env_set("fdt_file", buff);
+
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	env_set("board_name", "SM2S");
+	env_set("board_rev", "iMX8MP");
+#endif
+
+	return 0;
+}
+#endif /* !defined(CONFIG_SPL_BUILD) */
