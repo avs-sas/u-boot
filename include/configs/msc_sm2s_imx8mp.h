@@ -42,6 +42,8 @@
 	"bootm_size=0x10000000\0" \
 	"mmcpart=1\0" \
 	"mmcroot=/dev/mmcblk1p2 rootwait rw\0" \
+	"bootargs=console=ttymxc1,115200 debug rootwait root=/dev/mmcblk1p2 rw\0" \
+	"bootcmd=fatload mmc 1:1 0x40400000 Image; fatload mmc 1:1 0x43000000 imx8mp-msc-sm2s-ep2-isi1-alvium-gmsl2-hdmi.dtb; booti 0x40400000 - 0x43000000;\0" \
 
 /* Link Definitions */
 
