@@ -600,6 +600,7 @@ static int handle_decomp_error(int comp_type, size_t uncomp_size,
 static int bootm_load_os(struct bootm_headers *images, int boot_progress)
 {
 	struct image_info os = images->os;
+	const char *os_name = images->fit_uname_os;
 	ulong load = os.load;
 	ulong load_end;
 	ulong blob_start = os.start;
@@ -668,6 +669,11 @@ static int bootm_load_os(struct bootm_headers *images, int boot_progress)
 			bootstage_error(BOOTSTAGE_ID_OVERWRITTEN);
 			return BOOTM_ERR_RESET;
 		}
+	}
+
+	if (!(strcmp(os_name, "uefi"))) {
+		printf("Booting os_name: %s \n", os_name);
+		return 0;
 	}
 
 	if (IS_ENABLED(CONFIG_CMD_BOOTI) && images->os.arch == IH_ARCH_ARM64 &&
