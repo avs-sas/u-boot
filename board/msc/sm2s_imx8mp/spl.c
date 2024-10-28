@@ -58,6 +58,11 @@ static const struct variant_record variants[] = {
 		.dram_size	= SZ_2G,
 		.dram_timing	= &lpddr4_mt53d512m32d2ds_2gib_2chn_2cs_timing,
 	}, {
+		.rev		= "B0",
+		.feature	= "24N0600I",
+		.dram_size	= SZ_4G,
+		.dram_timing	= &lpddr4_mt53d1024m32d4dt_4gib_2chn_2cs_timing,
+	}, {
 		NULL, NULL, 0, NULL
 	},
 };
