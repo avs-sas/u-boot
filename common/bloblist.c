@@ -547,7 +547,7 @@ int bloblist_init(void)
 			return log_msg_ret("BLOBLIST_FIXED is not enabled",
 					   ret);
 		}
-		log_debug("Creating new bloblist size %lx at %lx\n", size,
+		log_warning("Creating new bloblist size %lx at %lx\n", size,
 			  addr);
 		ret = bloblist_new(addr, size, 0, 0);
 	} else {
